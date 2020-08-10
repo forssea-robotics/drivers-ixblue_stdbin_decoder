@@ -53,6 +53,7 @@ execute_process(COMMAND "${CMAKE_COMMAND}" --build .
 # Add googletest directly to our build. This adds
 # the following targets: gtest, gtest_main, gmock
 # and gmock_main
+set(INSTALL_GTEST OFF)
 add_subdirectory("${CMAKE_BINARY_DIR}/googletest-src"
                  "${CMAKE_BINARY_DIR}/googletest-build")
 
