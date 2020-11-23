@@ -77,7 +77,7 @@ endif()
 ###########
 
 ## Declare a C++ library
-add_library(${PROJECT_NAME} src/memory_block_parser.cpp src/stdbin_decoder.cpp)
+add_library(${PROJECT_NAME} src/memory_block_parser.cpp src/stdbin_decoder.cpp src/data_serializer.cpp src/stdbin_encoder.cpp)
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME}
   PUBLIC

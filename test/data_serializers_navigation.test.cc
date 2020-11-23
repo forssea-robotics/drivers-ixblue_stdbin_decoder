@@ -1,38 +1,38 @@
 #include <gtest/gtest.h>
 
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/acceleration_geographic_frame.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/acceleration_vessel_frame.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/acceleration_vessel_frame_deviation.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/ahrs_algorithm_status.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/ahrs_system_status.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/ahrs_user_status.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/attitude_heading.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/attitude_heading_deviation.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/attitude_quaternion.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/attitude_quaternion_deviation.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/course_speed_over_ground.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/current_geographic_frame.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/current_geographic_frame_deviation.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/heading_roll_pitch_rate.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/heave_surge_sway_speed.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/ins_algorithm_status.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/ins_system_status.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/ins_user_status.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/position.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/position_deviation.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/raw_acceleration_vessel_frame.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/realtime_heave_surge_sway.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/rotation_rate_vessel_frame.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/rotation_rate_vessel_frame_deviation.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/sensor_status.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/smart_heave.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/speed_geographic_frame.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/speed_geographic_frame_deviation.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/speed_vessel_frame.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/system_date.h>
-#include <iXblue_stdbin_decoder/data_serializers/navigation_data/temperatures.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/acceleration_geographic_frame.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/acceleration_vessel_frame.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/acceleration_vessel_frame_deviation.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/ahrs_algorithm_status.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/ahrs_system_status.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/ahrs_user_status.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/attitude_heading.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/attitude_heading_deviation.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/attitude_quaternion.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/attitude_quaternion_deviation.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/course_speed_over_ground.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/current_geographic_frame.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/current_geographic_frame_deviation.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/heading_roll_pitch_rate.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/heave_surge_sway_speed.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/ins_algorithm_status.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/ins_system_status.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/ins_user_status.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/position.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/position_deviation.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/raw_acceleration_vessel_frame.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/realtime_heave_surge_sway.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/rotation_rate_vessel_frame.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/rotation_rate_vessel_frame_deviation.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/sensor_status.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/smart_heave.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/speed_geographic_frame.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/speed_geographic_frame_deviation.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/speed_vessel_frame.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/system_date.h>
+#include <ixblue_stdbin_decoder/data_serializers/navigation_data/temperatures.h>
 
-using namespace StdBinDecoder;
+using namespace ixblue_stdbin_decoder;
 
 #define ASSERT_SERIALIZATION(serializer, member, model, expected)    \
     std::vector<uint8_t> memory(expected.size());                    \

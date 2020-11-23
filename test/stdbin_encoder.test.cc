@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include <iXblue_stdbin_decoder/data_models/stdbin.h>
-#include <iXblue_stdbin_decoder/stdbin_encoder.h>
+#include <ixblue_stdbin_decoder/data_models/stdbin.h>
+#include <ixblue_stdbin_decoder/stdbin_encoder.h>
 #include <numeric>
 
-using namespace StdBinDecoder;
+using namespace ixblue_stdbin_decoder;
 
 TEST(StdBinEncoder, SerializesABinaryPacket)
 {

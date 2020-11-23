@@ -1,7 +1,7 @@
-#include <iXblue_stdbin_decoder/data_serializer.h>
+#include <ixblue_stdbin_decoder/data_serializer.h>
 #include <boost/endian/conversion.hpp>
 
-using namespace StdBinDecoder;
+namespace ixblue_stdbin_decoder {
 
 template <typename T, typename M>
 static boost::asio::mutable_buffer& serializeInPlace(boost::asio::mutable_buffer& buf,
@@ -14,43 +14,43 @@ static boost::asio::mutable_buffer& serializeInPlace(boost::asio::mutable_buffer
     return buf;
 }
 
-boost::asio::mutable_buffer& StdBinDecoder::operator<<(boost::asio::mutable_buffer& buf,
+boost::asio::mutable_buffer& operator<<(boost::asio::mutable_buffer& buf,
                                                        double data)
 {
     return serializeInPlace<int64_t, double>(buf, data);
 }
 
-boost::asio::mutable_buffer& StdBinDecoder::operator<<(boost::asio::mutable_buffer& buf,
+boost::asio::mutable_buffer& operator<<(boost::asio::mutable_buffer& buf,
                                                        float data)
 {
     return serializeInPlace<int32_t, float>(buf, data);
 }
 
-boost::asio::mutable_buffer& StdBinDecoder::operator<<(boost::asio::mutable_buffer& buf,
+boost::asio::mutable_buffer& operator<<(boost::asio::mutable_buffer& buf,
                                                        int32_t data)
 {
     return serializeInPlace<int32_t, uint32_t>(buf, data);
 }
 
-boost::asio::mutable_buffer& StdBinDecoder::operator<<(boost::asio::mutable_buffer& buf,
+boost::asio::mutable_buffer& operator<<(boost::asio::mutable_buffer& buf,
                                                        uint64_t data)
 {
     return serializeInPlace<int64_t, uint64_t>(buf, data);
 }
 
-boost::asio::mutable_buffer& StdBinDecoder::operator<<(boost::asio::mutable_buffer& buf,
+boost::asio::mutable_buffer& operator<<(boost::asio::mutable_buffer& buf,
                                                        uint32_t data)
 {
     return serializeInPlace<int32_t, uint32_t>(buf, data);
 }
 
-boost::asio::mutable_buffer& StdBinDecoder::operator<<(boost::asio::mutable_buffer& buf,
+boost::asio::mutable_buffer& operator<<(boost::asio::mutable_buffer& buf,
                                                        uint16_t data)
 {
     return serializeInPlace<int16_t, uint16_t>(buf, data);
 }
 
-boost::asio::mutable_buffer& StdBinDecoder::operator<<(boost::asio::mutable_buffer& buf,
+boost::asio::mutable_buffer& operator<<(boost::asio::mutable_buffer& buf,
                                                        uint8_t data)
 {
     return serializeInPlace<int8_t, uint8_t>(buf, data);
@@ -74,3 +74,5 @@ bool DataSerializer::serialize(boost::asio::mutable_buffer& outBuffer, tBitMask&
     }
     return false;
 }
+
+}  // namespace ixblue_stdbin_decoder

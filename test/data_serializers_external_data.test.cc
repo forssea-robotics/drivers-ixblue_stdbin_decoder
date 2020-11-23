@@ -1,22 +1,22 @@
 #include <array>
 #include <gtest/gtest.h>
 
-#include <iXblue_stdbin_decoder/data_serializers/external_data/depth.h>
-#include <iXblue_stdbin_decoder/data_serializers/external_data/dmi.h>
-#include <iXblue_stdbin_decoder/data_serializers/external_data/dvl_ground_speed.h>
-#include <iXblue_stdbin_decoder/data_serializers/external_data/dvl_water_speed.h>
-#include <iXblue_stdbin_decoder/data_serializers/external_data/emlog.h>
-#include <iXblue_stdbin_decoder/data_serializers/external_data/eventmarker.h>
-#include <iXblue_stdbin_decoder/data_serializers/external_data/gnss.h>
-#include <iXblue_stdbin_decoder/data_serializers/external_data/lbl.h>
-#include <iXblue_stdbin_decoder/data_serializers/external_data/logbook.h>
-#include <iXblue_stdbin_decoder/data_serializers/external_data/sound_velocity.h>
-#include <iXblue_stdbin_decoder/data_serializers/external_data/turret_angles.h>
-#include <iXblue_stdbin_decoder/data_serializers/external_data/usbl.h>
-#include <iXblue_stdbin_decoder/data_serializers/external_data/utc.h>
-#include <iXblue_stdbin_decoder/data_serializers/external_data/vtg.h>
+#include <ixblue_stdbin_decoder/data_serializers/external_data/depth.h>
+#include <ixblue_stdbin_decoder/data_serializers/external_data/dmi.h>
+#include <ixblue_stdbin_decoder/data_serializers/external_data/dvl_ground_speed.h>
+#include <ixblue_stdbin_decoder/data_serializers/external_data/dvl_water_speed.h>
+#include <ixblue_stdbin_decoder/data_serializers/external_data/emlog.h>
+#include <ixblue_stdbin_decoder/data_serializers/external_data/eventmarker.h>
+#include <ixblue_stdbin_decoder/data_serializers/external_data/gnss.h>
+#include <ixblue_stdbin_decoder/data_serializers/external_data/lbl.h>
+#include <ixblue_stdbin_decoder/data_serializers/external_data/logbook.h>
+#include <ixblue_stdbin_decoder/data_serializers/external_data/sound_velocity.h>
+#include <ixblue_stdbin_decoder/data_serializers/external_data/turret_angles.h>
+#include <ixblue_stdbin_decoder/data_serializers/external_data/usbl.h>
+#include <ixblue_stdbin_decoder/data_serializers/external_data/utc.h>
+#include <ixblue_stdbin_decoder/data_serializers/external_data/vtg.h>
 
-using namespace StdBinDecoder;
+using namespace ixblue_stdbin_decoder;
 
 #define ASSERT_SERIALIZATION(serializer, member, model, expected)    \
     std::vector<uint8_t> memory(expected.size());                    \
