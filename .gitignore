@@ -4,3 +4,6 @@
 
 # Ignore .vscode folder
 /.vscode
+
+# Ignore QtCreator files
+*.user*

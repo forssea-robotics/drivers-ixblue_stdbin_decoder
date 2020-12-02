@@ -1,14 +1,16 @@
-#include <boost/asio/buffered_stream.hpp>
-#include <boost/filesystem.hpp>
-#include <fstream>
 #include <gtest/gtest.h>
-#include <iXblue_stdbin_decoder/stdbin_decoder.h>
+#include <ixblue_stdbin_decoder/stdbin_decoder.h>
 
-TEST(StdBinDecoder, WeCanParseAFrameWithSomeMissingFields)
+#include "datasets/log_STDBIN_V2.h"
+#include "datasets/log_STDBIN_V3.h"
+#include "datasets/log_STDBIN_V4.h"
+#include "datasets/log_STDBIN_V5.h"
+
+TEST(StdBinDecoder, WeCannotParseAFrameWithSomeMissingFields)
 {
     // Given a frame with only attitude :
     // clang-format off
-    std::vector<uint8_t> memory{
+    const std::vector<uint8_t> memory{
         'I',  'X',  /*IX blue header   */
         0x02,       /*Protocol Version */
         0x00, 0x00, 0x00, 0x01, /* navigation bitmask (0x00000001 means only AttitudeAndHeading) */
@@ -19,11 +21,37 @@ TEST(StdBinDecoder, WeCanParseAFrameWithSomeMissingFields)
         0x00, 0x00, 0xa0, 0x3f, /* Heading : 1.25f */
         0x00, 0x00, 0xc0, 0xbf, /* roll : -1.5f   */
         0xcd, 0xcc, 0x48, 0x41, /* Pitch : 12.55f */
+        /* Checksum missing */
     };
     // clang-format on
 
-    StdBinDecoder::StdBinDecoder parser;
-    EXPECT_TRUE(parser.parse(memory));
+    ixblue_stdbin_decoder::StdBinDecoder parser;
+    parser.addNewData(memory);
+    EXPECT_THROW(parser.parseNextFrame(), std::runtime_error);
+}
+
+TEST(StdBinDecoder, WeCanParseAMinimalV2Frame)
+{
+    // Given a frame with only attitude :
+    // clang-format off
+    const std::vector<uint8_t> memory{
+        'I',  'X',  /*IX blue header   */
+        0x02,       /*Protocol Version */
+        0x00, 0x00, 0x00, 0x01, /* navigation bitmask (0x00000001 means only AttitudeAndHeading) */
+        0x00, 0x00, 0x00, 0x00, /* external data bitmask */
+        0x00, 0x25,             /* Telegram size */
+        0x00, 0x00, 0x00, 0x05, /* navigation validity time (500 us) */
+        0x00, 0x00, 0x01, 0x23, /* counter (0x123) */
+        0x00, 0x00, 0xa0, 0x3f, /* Heading : 1.25f */
+        0x00, 0x00, 0xc0, 0xbf, /* roll : -1.5f   */
+        0xcd, 0xcc, 0x48, 0x41, /* Pitch : 12.55f */
+        0x00, 0x00, 0x5, 0x72  /* Checksum */
+    };
+    // clang-format on
+
+    ixblue_stdbin_decoder::StdBinDecoder parser;
+    parser.addNewData(memory);
+    ASSERT_TRUE(parser.parseNextFrame());
     auto result = parser.getLastNavData();
 
     ASSERT_FALSE(result.attitudeHeadingDeviation.is_initialized());
@@ -34,18 +62,10 @@ TEST(StdBinDecoder, WeCanParseAFrameWithSomeMissingFields)
 
 TEST(StdBinDecoder, WeCanParseV2Protocol)
 {
-    std::ifstream file("../test/datasets/log_STDBIN_V2.log",
-                       std::ios_base::in | std::ios_base::binary);
-    ASSERT_TRUE(file);
-    file.seekg(0, std::ios::end);
-    uint64_t length = file.tellg();
-    file.seekg(0);
-    std::vector<uint8_t> memory(length);
-    file.read(reinterpret_cast<char*>(memory.data()), length);
+    ixblue_stdbin_decoder::StdBinDecoder parser;
 
-    StdBinDecoder::StdBinDecoder parser;
-
-    EXPECT_TRUE(parser.parse(memory));
+    parser.addNewData(log_STDBIN_V2);
+    ASSERT_TRUE(parser.parseNextFrame());
     auto result = parser.getLastNavData();
 
     EXPECT_TRUE(result.attitudeHeading.is_initialized());
@@ -182,30 +202,23 @@ TEST(StdBinDecoder, WeCanParseV2Protocol)
 
 TEST(StdBinDecoder, WeCanParseV2ProtocolReceivedInTwoPartsWhereverCutpointIs)
 {
-    std::string path = std::string("../test/datasets/log_STDBIN_V2.log");
-    std::ifstream file(path, std::ios_base::in | std::ios_base::binary);
-    ASSERT_TRUE(file);
-    file.seekg(0, std::ios::end);
-    uint64_t length = file.tellg();
-    file.seekg(0);
-    std::vector<uint8_t> memory(length);
-    file.read(reinterpret_cast<char*>(memory.data()), length);
-
     // By instanciating parser out of the loop, we also test that we can parse
     // multiple messages.
-    StdBinDecoder::StdBinDecoder parser;
+    ixblue_stdbin_decoder::StdBinDecoder parser;
 
-    for(size_t i = 1; i < memory.size(); ++i)
+    for(size_t i = 1; i < log_STDBIN_V2.size(); ++i)
     {
         std::vector<uint8_t> part1, part2;
-        auto cutPoint = memory.begin();
-        // we cut the packet every where :
+        auto cutPoint = log_STDBIN_V2.begin();
+        // we cut the packet everywhere:
         std::advance(cutPoint, i);
-        std::copy(std::begin(memory), cutPoint, std::back_inserter(part1));
-        std::copy(cutPoint, std::end(memory), std::back_inserter(part2));
+        std::copy(std::begin(log_STDBIN_V2), cutPoint, std::back_inserter(part1));
+        std::copy(cutPoint, std::end(log_STDBIN_V2), std::back_inserter(part2));
 
-        EXPECT_FALSE(parser.parse(part1));
-        EXPECT_TRUE(parser.parse(part2));
+        parser.addNewData(part1);
+        EXPECT_FALSE(parser.parseNextFrame());
+        parser.addNewData(part2);
+        ASSERT_TRUE(parser.parseNextFrame());
         auto result = parser.getLastNavData();
 
         EXPECT_TRUE(result.attitudeHeading.is_initialized());
@@ -215,20 +228,60 @@ TEST(StdBinDecoder, WeCanParseV2ProtocolReceivedInTwoPartsWhereverCutpointIs)
     }
 }
 
+TEST(StdBinDecoder, WeCanParseV2ProtocolReceivedWithGarbageAtFront)
+{
+    ixblue_stdbin_decoder::StdBinDecoder parser;
+
+    std::vector<uint8_t> frame;
+    // First add half-frame (=garbage)
+    std::copy(log_STDBIN_V2.begin() + log_STDBIN_V2.size() / 2, log_STDBIN_V2.end(),
+              std::back_inserter(frame));
+    // Then complete frame
+    std::copy(log_STDBIN_V2.begin(), log_STDBIN_V2.end(), std::back_inserter(frame));
+
+    parser.addNewData(frame);
+    ASSERT_TRUE(parser.parseNextFrame());
+    auto result = parser.getLastNavData();
+
+    EXPECT_TRUE(result.attitudeHeading.is_initialized());
+    EXPECT_FLOAT_EQ(result.attitudeHeading.get().heading_deg, 209.982);
+    EXPECT_FLOAT_EQ(result.attitudeHeading.get().roll_deg, 0.016);
+    EXPECT_FLOAT_EQ(result.attitudeHeading.get().pitch_deg, 0.206);
+}
+
+TEST(StdBinDecoder, WeCanParse2FramesInTheSameBufferWithGarbageOnFront)
+{
+    ixblue_stdbin_decoder::StdBinDecoder parser;
+
+    std::vector<uint8_t> frame;
+    // First add half-frame (=garbage)
+    std::copy(log_STDBIN_V2.begin() + log_STDBIN_V2.size() / 2, log_STDBIN_V2.end(),
+              std::back_inserter(frame));
+    // Then a V2 complete frame
+    std::copy(log_STDBIN_V2.begin(), log_STDBIN_V2.end(), std::back_inserter(frame));
+    // And a V4 complete frame
+    std::copy(log_STDBIN_V4.begin(), log_STDBIN_V4.end(), std::back_inserter(frame));
+
+    parser.addNewData(frame);
+
+    ASSERT_TRUE(parser.parseNextFrame());
+    const auto v2Header = parser.getLastHeaderData();
+    EXPECT_EQ(v2Header.protocolVersion, 2);
+
+    ASSERT_TRUE(parser.parseNextFrame());
+    const auto v4Header = parser.getLastHeaderData();
+    EXPECT_EQ(v4Header.protocolVersion, 4);
+
+    // Internal buffer is now empty, cannot parse a frame anymore
+    ASSERT_FALSE(parser.parseNextFrame());
+}
+
 TEST(StdBinDecoder, WeCanParseV3Protocol)
 {
-    std::ifstream file("../test/datasets/log_STDBIN_V3.log",
-                       std::ios_base::in | std::ios_base::binary);
-    ASSERT_TRUE(file);
-    file.seekg(0, std::ios::end);
-    uint64_t length = file.tellg();
-    file.seekg(0);
-    std::vector<uint8_t> memory(length);
-    file.read(reinterpret_cast<char*>(memory.data()), length);
+    ixblue_stdbin_decoder::StdBinDecoder parser;
 
-    StdBinDecoder::StdBinDecoder parser;
-
-    EXPECT_TRUE(parser.parse(memory));
+    parser.addNewData(log_STDBIN_V3);
+    ASSERT_TRUE(parser.parseNextFrame());
     auto result = parser.getLastNavData();
 
     // --- Navigation data block
@@ -567,18 +620,10 @@ TEST(StdBinDecoder, WeCanParseV3Protocol)
 
 TEST(StdBinDecoder, WeCanParseV4Protocol)
 {
-    std::ifstream file("../test/datasets/log_STDBIN_V4.log",
-                       std::ios_base::in | std::ios_base::binary);
-    ASSERT_TRUE(file);
-    file.seekg(0, std::ios::end);
-    uint64_t length = file.tellg();
-    file.seekg(0);
-    std::vector<uint8_t> memory(length);
-    file.read(reinterpret_cast<char*>(memory.data()), length);
+    ixblue_stdbin_decoder::StdBinDecoder parser;
 
-    StdBinDecoder::StdBinDecoder parser;
-
-    EXPECT_TRUE(parser.parse(memory));
+    parser.addNewData(log_STDBIN_V4);
+    ASSERT_TRUE(parser.parseNextFrame());
     auto result = parser.getLastNavData();
 
     // --- Navigation data block
@@ -827,18 +872,10 @@ TEST(StdBinDecoder, WeCanParseV4Protocol)
 
 TEST(StdBinDecoder, WeCanParseV5Protocol)
 {
-    std::ifstream file("../test/datasets/log_STDBIN_V5.log",
-                       std::ios_base::in | std::ios_base::binary);
-    ASSERT_TRUE(file);
-    file.seekg(0, std::ios::end);
-    uint64_t length = file.tellg();
-    file.seekg(0);
-    std::vector<uint8_t> memory(length);
-    file.read(reinterpret_cast<char*>(memory.data()), length);
+    ixblue_stdbin_decoder::StdBinDecoder parser;
 
-    StdBinDecoder::StdBinDecoder parser;
-
-    EXPECT_TRUE(parser.parse(memory));
+    parser.addNewData(log_STDBIN_V5);
+    ASSERT_TRUE(parser.parseNextFrame());
     auto result = parser.getLastNavData();
 
     // --- Navigation data block
@@ -1083,6 +1120,31 @@ TEST(StdBinDecoder, WeCanParseV5Protocol)
     EXPECT_FALSE(result.vtg2.is_initialized());
 
     EXPECT_FALSE(result.logBook.is_initialized());
+}
+
+TEST(StdBinDecoder, WeCanParseAnAnswerFrame)
+{
+    // clang-format off
+    const std::vector<uint8_t> memory{
+        'A',  'N',  /* IX blue header   */
+        0x03,       /* Protocol Version */
+        0x00, 0x0d, /* Telegram size */
+        0xde, 0xad, 0xbe, 0xef, /* payload */
+        0x00, 0x00, 0x03, 0xd7, /* checksum */
+    };
+    // clang-format on
+
+    ixblue_stdbin_decoder::StdBinDecoder parser;
+    parser.addNewData(memory);
+    ASSERT_TRUE(parser.parseNextFrame());
+    const auto header = parser.getLastHeaderData();
+    const auto nav = parser.getLastNavData();
+    const auto answer = parser.getLastAnswerData();
+    ASSERT_EQ(header.messageType,
+              ixblue_stdbin_decoder::Data::NavHeader::MessageType::Answer);
+    EXPECT_FALSE(nav.attitudeHeading.is_initialized());
+    const std::vector<uint8_t> expectedAnswer{0xde, 0xad, 0xbe, 0xef};
+    EXPECT_EQ(answer, expectedAnswer);
 }
 
 int main(int argc, char** argv)
