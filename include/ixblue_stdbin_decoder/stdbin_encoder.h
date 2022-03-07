@@ -60,12 +60,10 @@ public:
 protected:
     const DataMode dataMode;
     const ProtocolVersion protocolVersion;
-    const tSerializersSet navigationSerializers;
-    const tSerializersSet extendedNavigationSerializers;
-    const tSerializersSet externalDataSerializers;
+    const tSerializersSet navigationSerializers, extendedNavigationSerializers, externalDataSerializers;
 
-    std::pair<uint32_t, std::vector<uint8_t>> processExternalData(
-        const Data::BinaryNav binaryNav
+    std::pair<uint32_t, std::vector<uint8_t>> processData(
+        const Data::BinaryNav& binaryNav, const tSerializersSet& serializers
     ) const;
 
     size_t getHeaderSize(const Data::BinaryNav& binaryNav) const;
