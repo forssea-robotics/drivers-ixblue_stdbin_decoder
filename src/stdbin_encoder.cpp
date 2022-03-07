@@ -70,6 +70,51 @@ namespace ixblue_stdbin_decoder
 StdBinEncoder::StdBinEncoder::StdBinEncoder(ProtocolVersion version, DataMode mode)
     : dataMode(mode)
     , protocolVersion(version)
+    , navigationSerializers(
+        { std::make_shared<Serializer::AttitudeHeading>(),
+           std::make_shared<Serializer::AttitudeHeadingDeviation>(),
+           std::make_shared<Serializer::RealTimeHeaveSurgeSway>(),
+           std::make_shared<Serializer::SmartHeave>(),
+           std::make_shared<Serializer::HeadingRollPitchRate>(),
+           std::make_shared<Serializer::RotationRateVesselFrame>(),
+           std::make_shared<Serializer::AccelerationVesselFrame>(),
+           std::make_shared<Serializer::Position>(),
+           std::make_shared<Serializer::PositionDeviation>(),
+           std::make_shared<Serializer::SpeedGeographicFrame>(),
+           std::make_shared<Serializer::SpeedGeographicFrameDeviation>(),
+           std::make_shared<Serializer::CurrentGeographicFrame>(),
+           std::make_shared<Serializer::CurrentGeographicFrameDeviation>(),
+           std::make_shared<Serializer::SystemDate>(),
+           std::make_shared<Serializer::SensorStatus>(),
+           std::make_shared<Serializer::INSAlgorithmStatus>(),
+           std::make_shared<Serializer::INSSystemStatus>(),
+           std::make_shared<Serializer::INSUserStatus>(),
+           std::make_shared<Serializer::AHRSAlgorithmStatus>(),
+           std::make_shared<Serializer::AHRSSystemStatus>(),
+           std::make_shared<Serializer::AHRSUserStatus>(),
+           std::make_shared<Serializer::HeaveSurgeSwaySpeed>(),
+           std::make_shared<Serializer::SpeedVesselFrame>(),
+           std::make_shared<Serializer::AccelerationGeographicFrame>(),
+           std::make_shared<Serializer::CourseSpeedoverGround>(),
+           std::make_shared<Serializer::Temperatures>(),
+           std::make_shared<Serializer::AttitudeQuaternion>(),
+           std::make_shared<Serializer::AttitudeQuaternionDeviation>(),
+           std::make_shared<Serializer::RawAccelerationVesselFrame>(),
+           std::make_shared<Serializer::AccelerationVesselFrameDeviation>(),
+           std::make_shared<Serializer::RotationRateVesselFrameDeviation>()},
+          [](const DataSerializerPtr& lhs, const DataSerializerPtr& rhs) -> bool {
+              return lhs->getOffsetInMask() < rhs->getOffsetInMask();
+          })
+    , extendedNavigationSerializers(
+          {std::make_shared<Serializer::RotationAccelerationVesselFrame>(),
+           std::make_shared<Serializer::RotationAccelerationVesselFrameDeviation>(),
+           std::make_shared<Serializer::RawRotationRateVesselFrame>(),
+           std::make_shared<Serializer::VehicleAttitudeHeading>(),
+           std::make_shared<Serializer::VehiclePosition>(),
+           std::make_shared<Serializer::VehiclePositionDeviation>()},
+          [](const DataSerializerPtr& lhs, const DataSerializerPtr& rhs) -> bool {
+              return lhs->getOffsetInMask() < rhs->getOffsetInMask();
+          })
     , externalDataSerializers(
           { std::make_shared<Serializer::Utc>(),
             std::make_shared<Serializer::Gnss1>(),

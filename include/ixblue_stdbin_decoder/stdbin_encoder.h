@@ -60,6 +60,8 @@ public:
 protected:
     const DataMode dataMode;
     const ProtocolVersion protocolVersion;
+    const tSerializersSet navigationSerializers;
+    const tSerializersSet extendedNavigationSerializers;
     const tSerializersSet externalDataSerializers;
 
     std::pair<uint32_t, std::vector<uint8_t>> processExternalData(
