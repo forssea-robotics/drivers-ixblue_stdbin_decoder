@@ -350,4 +350,9 @@ Data::NavHeader::MessageType StdBinDecoder::getHeaderType(const_buffer& buffer) 
     return Data::NavHeader::MessageType::Unknown;
 }
 
+void StdBinDecoder::clearData()
+{
+  internalBuffer.clear();
+}
+
 } // namespace ixblue_stdbin_decoder
