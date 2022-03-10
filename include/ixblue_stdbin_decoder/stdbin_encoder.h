@@ -55,7 +55,7 @@ public:
      * \return a vector with the serialized data
      * \exception runtime_error if a parse error occurs.
      */
-    std::vector<uint8_t> serialize(const Data::BinaryNav& binaryNav) const;
+    std::vector<uint8_t> serialize(const Data::BinaryNav& binaryNav, uint32_t time_100us=0) const;
 
 protected:
     const DataMode dataMode;

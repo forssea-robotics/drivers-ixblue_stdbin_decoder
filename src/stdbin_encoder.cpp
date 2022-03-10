@@ -188,7 +188,7 @@ size_t StdBinEncoder::getHeaderSize(const Data::BinaryNav& binaryNav) const
     }
 }
 
-std::vector<uint8_t> StdBinEncoder::serialize(const Data::BinaryNav& binaryNav) const
+std::vector<uint8_t> StdBinEncoder::serialize(const Data::BinaryNav& binaryNav, uint32_t time_100us) const
 {
     uint32_t navigationDataBitMask = 0, extendedNavigationDataBitMask = 0, externalDataBitMask;
     std::vector<uint8_t> navigationData, extendedNavigationData, externalData;
@@ -229,8 +229,8 @@ std::vector<uint8_t> StdBinEncoder::serialize(const Data::BinaryNav& binaryNav) 
 
     buffer << telegramSize;
 
-    buffer << (uint8_t)0x00; // UTC time reference
-    buffer << std::array<uint8_t, 7>{ 0, 0, 0, 0, 0, 0, 0 }; // rfu (should be 0x00
+    buffer << (uint32_t) time_100us; // UTC time reference
+    buffer << std::array<uint8_t, 4>{ 0, 0, 0x01, 0x23 }; // rfu (should be 0x00
                                                              // in input mode)
 
     buffer << navigationData;
