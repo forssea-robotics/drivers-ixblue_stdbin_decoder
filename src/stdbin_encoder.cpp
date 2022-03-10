@@ -200,9 +200,11 @@ std::vector<uint8_t> StdBinEncoder::serialize(const Data::BinaryNav& binaryNav) 
     }
     std::tie(externalDataBitMask, externalData) = processData(binaryNav, externalDataSerializers);
 
-    uint16_t telegramSize =  getHeaderSize(binaryNav) + // the header size +
-                             externalData.size() + 4;   // external sensor data size
-                                                        // + 4 bytes checksum
+    uint16_t telegramSize =  getHeaderSize(binaryNav) +         // the header size +
+                             navigationData.size() +            // navigation data size
+                             extendedNavigationData.size() +    // extended navigation data size
+                             externalData.size() +              // external sensor data size
+                             4;                                 // + 4 bytes checksum
 
     std::vector<uint8_t> memory(telegramSize);
     boost::asio::mutable_buffer buffer(memory.data(), memory.size());
