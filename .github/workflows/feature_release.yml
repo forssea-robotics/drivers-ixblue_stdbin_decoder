@@ -1,0 +1,60 @@
+name: Build & Test the package on a feature pull request on develop
+
+on:
+  push:
+    branches: [ "release/*", master ]
+  pull_request:
+    branches: [ develop ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: [self-hosted, linux, x64]
+
+    strategy:
+      matrix:
+        distro: [galactic]
+
+    env:
+      PKG_NAME: drivers-ixblue_stdbin_decoder
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: src/drivers-ixblue_stdbin_decoder
+
+      - name: Install dependencies
+        run: |
+          sudo rosdep fix-permissions
+          rosdep update
+          rosdep install --from-paths src -y --rosdistro ${{ matrix.distro }}
+
+      - name: Colcon build
+        run: |
+            source /opt/ros/galactic/local_setup.bash
+            colcon build
+
+      - name: Colcon test
+        run: |
+            colcon test
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: |
+            build/
+
+      - name: Upload install artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: install
+          path: |
+            install/
+
+      - name: Upload log artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: log
+          path: |
+            log/
