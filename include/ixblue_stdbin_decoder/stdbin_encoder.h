@@ -55,15 +55,15 @@ public:
      * \return a vector with the serialized data
      * \exception runtime_error if a parse error occurs.
      */
-    std::vector<uint8_t> serialize(const Data::BinaryNav& binaryNav) const;
+    std::vector<uint8_t> serialize(const Data::BinaryNav& binaryNav, uint32_t time_100us=0) const;
 
 protected:
     const DataMode dataMode;
     const ProtocolVersion protocolVersion;
-    const tSerializersSet externalDataSerializers;
+    const tSerializersSet navigationSerializers, extendedNavigationSerializers, externalDataSerializers;
 
-    std::pair<uint32_t, std::vector<uint8_t>> processExternalData(
-        const Data::BinaryNav binaryNav
+    std::pair<uint32_t, std::vector<uint8_t>> processData(
+        const Data::BinaryNav& binaryNav, const tSerializersSet& serializers
     ) const;
 
     size_t getHeaderSize(const Data::BinaryNav& binaryNav) const;

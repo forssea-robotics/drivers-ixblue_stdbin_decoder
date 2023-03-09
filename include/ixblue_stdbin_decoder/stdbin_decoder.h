@@ -86,6 +86,8 @@ public:
      */
     bool parseNextFrame();
 
+    void clearData();
+
     Data::BinaryNav getLastNavData(void) const { return lastParsed; }
     Data::NavHeader getLastHeaderData(void) const { return lastHeader; }
     const std::vector<uint8_t>& getLastAnswerData(void) const { return lastAnswer; }

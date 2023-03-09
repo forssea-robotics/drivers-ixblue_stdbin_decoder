@@ -70,6 +70,51 @@ namespace ixblue_stdbin_decoder
 StdBinEncoder::StdBinEncoder::StdBinEncoder(ProtocolVersion version, DataMode mode)
     : dataMode(mode)
     , protocolVersion(version)
+    , navigationSerializers(
+        { std::make_shared<Serializer::AttitudeHeading>(),
+           std::make_shared<Serializer::AttitudeHeadingDeviation>(),
+           std::make_shared<Serializer::RealTimeHeaveSurgeSway>(),
+           std::make_shared<Serializer::SmartHeave>(),
+           std::make_shared<Serializer::HeadingRollPitchRate>(),
+           std::make_shared<Serializer::RotationRateVesselFrame>(),
+           std::make_shared<Serializer::AccelerationVesselFrame>(),
+           std::make_shared<Serializer::Position>(),
+           std::make_shared<Serializer::PositionDeviation>(),
+           std::make_shared<Serializer::SpeedGeographicFrame>(),
+           std::make_shared<Serializer::SpeedGeographicFrameDeviation>(),
+           std::make_shared<Serializer::CurrentGeographicFrame>(),
+           std::make_shared<Serializer::CurrentGeographicFrameDeviation>(),
+           std::make_shared<Serializer::SystemDate>(),
+           std::make_shared<Serializer::SensorStatus>(),
+           std::make_shared<Serializer::INSAlgorithmStatus>(),
+           std::make_shared<Serializer::INSSystemStatus>(),
+           std::make_shared<Serializer::INSUserStatus>(),
+           std::make_shared<Serializer::AHRSAlgorithmStatus>(),
+           std::make_shared<Serializer::AHRSSystemStatus>(),
+           std::make_shared<Serializer::AHRSUserStatus>(),
+           std::make_shared<Serializer::HeaveSurgeSwaySpeed>(),
+           std::make_shared<Serializer::SpeedVesselFrame>(),
+           std::make_shared<Serializer::AccelerationGeographicFrame>(),
+           std::make_shared<Serializer::CourseSpeedoverGround>(),
+           std::make_shared<Serializer::Temperatures>(),
+           std::make_shared<Serializer::AttitudeQuaternion>(),
+           std::make_shared<Serializer::AttitudeQuaternionDeviation>(),
+           std::make_shared<Serializer::RawAccelerationVesselFrame>(),
+           std::make_shared<Serializer::AccelerationVesselFrameDeviation>(),
+           std::make_shared<Serializer::RotationRateVesselFrameDeviation>()},
+          [](const DataSerializerPtr& lhs, const DataSerializerPtr& rhs) -> bool {
+              return lhs->getOffsetInMask() < rhs->getOffsetInMask();
+          })
+    , extendedNavigationSerializers(
+          {std::make_shared<Serializer::RotationAccelerationVesselFrame>(),
+           std::make_shared<Serializer::RotationAccelerationVesselFrameDeviation>(),
+           std::make_shared<Serializer::RawRotationRateVesselFrame>(),
+           std::make_shared<Serializer::VehicleAttitudeHeading>(),
+           std::make_shared<Serializer::VehiclePosition>(),
+           std::make_shared<Serializer::VehiclePositionDeviation>()},
+          [](const DataSerializerPtr& lhs, const DataSerializerPtr& rhs) -> bool {
+              return lhs->getOffsetInMask() < rhs->getOffsetInMask();
+          })
     , externalDataSerializers(
           { std::make_shared<Serializer::Utc>(),
             std::make_shared<Serializer::Gnss1>(),
@@ -102,32 +147,34 @@ StdBinEncoder::StdBinEncoder::StdBinEncoder(ProtocolVersion version, DataMode mo
               return lhs->getOffsetInMask() < rhs->getOffsetInMask();
           })
 {
-    if (dataMode != INPUT) {
+    if (dataMode != INPUT && dataMode != OUTPUT) {
         throw std::runtime_error(
-            "This library can only serialize data in input mode"
+            "This library can only serialize data in input/output mode"
         );
     }
 }
 
-std::pair<uint32_t, std::vector<uint8_t>> StdBinEncoder::processExternalData(
-    const Data::BinaryNav binaryNav
+std::pair<uint32_t, std::vector<uint8_t>> StdBinEncoder::processData(
+    const Data::BinaryNav& binaryNav, const tSerializersSet& serializers
 ) const
 {
-    std::vector<uint8_t> externalData;
-    std::bitset<32> externalDataBitMask;
+    std::vector<uint8_t> data;
+    std::bitset<32> bit_mask;
 
-    for (const auto& serializer : externalDataSerializers)
+    for (const auto& serializer : serializers)
     {
         std::vector<uint8_t> memory(serializer->getBytesCount());
         boost::asio::mutable_buffer buffer(memory.data(), memory.size());
 
-        if (serializer->serialize(buffer, externalDataBitMask, binaryNav)) {
-            externalData.insert(externalData.end(), memory.begin(), memory.end());
+        if (serializer->serialize(buffer, bit_mask, binaryNav)) {
+            data.insert(data.end(), memory.begin(), memory.end());
         }
     }
 
-   return { externalDataBitMask.to_ulong(), externalData };
+   return {bit_mask.to_ulong(), data };
 }
+
+
 
 size_t StdBinEncoder::getHeaderSize(const Data::BinaryNav& binaryNav) const
 {
@@ -141,16 +188,23 @@ size_t StdBinEncoder::getHeaderSize(const Data::BinaryNav& binaryNav) const
     }
 }
 
-std::vector<uint8_t> StdBinEncoder::serialize(const Data::BinaryNav& binaryNav) const
+std::vector<uint8_t> StdBinEncoder::serialize(const Data::BinaryNav& binaryNav, uint32_t time_100us) const
 {
-    uint32_t externalDataBitMask;
-    std::vector<uint8_t> externalData;
+    uint32_t navigationDataBitMask = 0, extendedNavigationDataBitMask = 0, externalDataBitMask;
+    std::vector<uint8_t> navigationData, extendedNavigationData, externalData;
 
-    std::tie(externalDataBitMask, externalData) = processExternalData(binaryNav);
+    if (dataMode == OUTPUT)
+    {
+        std::tie(navigationDataBitMask, navigationData) = processData(binaryNav, navigationSerializers);
+        std::tie(extendedNavigationDataBitMask, extendedNavigationData) = processData(binaryNav, extendedNavigationSerializers);
+    }
+    std::tie(externalDataBitMask, externalData) = processData(binaryNav, externalDataSerializers);
 
-    uint16_t telegramSize =  getHeaderSize(binaryNav) + // the header size +
-                             externalData.size() + 4;   // external sensor data size
-                                                        // + 4 bytes checksum
+    uint16_t telegramSize =  getHeaderSize(binaryNav) +         // the header size +
+                             navigationData.size() +            // navigation data size
+                             extendedNavigationData.size() +    // extended navigation data size
+                             externalData.size() +              // external sensor data size
+                             4;                                 // + 4 bytes checksum
 
     std::vector<uint8_t> memory(telegramSize);
     boost::asio::mutable_buffer buffer(memory.data(), memory.size());
@@ -158,11 +212,11 @@ std::vector<uint8_t> StdBinEncoder::serialize(const Data::BinaryNav& binaryNav) 
     buffer << (uint8_t)'I';
     buffer << (uint8_t)'X';
     buffer << (uint8_t)protocolVersion;
-    buffer << (uint32_t)0; // navigation bit mask (unused in input mode)
+    buffer << (uint32_t)navigationDataBitMask; // navigation bit mask (unused in input mode)
 
     if (protocolVersion > 2)
     {
-        buffer << (uint32_t)0; // extended navigation bit mask
+        buffer << (uint32_t)extendedNavigationDataBitMask; // extended navigation bit mask
                                // (unused in input mode)
     }
     buffer << externalDataBitMask;
@@ -175,10 +229,15 @@ std::vector<uint8_t> StdBinEncoder::serialize(const Data::BinaryNav& binaryNav) 
 
     buffer << telegramSize;
 
-    buffer << (uint8_t)0x00; // UTC time reference
-    buffer << std::array<uint8_t, 7>{ 0, 0, 0, 0, 0, 0, 0 }; // rfu (should be 0x00
+    buffer << (uint32_t) time_100us; // UTC time reference
+    buffer << std::array<uint8_t, 4>{ 0, 0, 0x01, 0x23 }; // rfu (should be 0x00
                                                              // in input mode)
 
+    buffer << navigationData;
+    if (protocolVersion > 2)
+    {
+         buffer << extendedNavigationData;
+    }
     buffer << externalData;
 
     uint32_t checksum = std::accumulate(memory.begin(), memory.end() - 4, 0);
