@@ -9,7 +9,7 @@ static boost::asio::mutable_buffer& serializeInPlace(boost::asio::mutable_buffer
 {
     T bytes = *reinterpret_cast<T*>(&data);
     boost::endian::native_to_big_inplace(bytes);
-    std::memcpy(boost::asio::buffer_cast<void*>(buf), &bytes, sizeof(M));
+    std::memcpy(static_cast<void*>(buf.data()), &bytes, sizeof(M));
     buf = buf + sizeof(M);
     return buf;
 }
