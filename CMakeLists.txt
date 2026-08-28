@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.8)
 
 # Read version from package.xml file
 file(READ "${CMAKE_CURRENT_LIST_DIR}/package.xml" file_contents)
@@ -27,8 +27,8 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
       "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
   endif()
 
-  # Compile as C++11
-  set(CMAKE_CXX_STANDARD 11)
+  # Compile as C++17
+  set(CMAKE_CXX_STANDARD 17)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
   # Let's ensure -std=c++xx instead of -std=g++xx
@@ -40,7 +40,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 endif()
 
 ## System dependency
-find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost 1.74 REQUIRED)
 find_package(Threads)
 
 include(GNUInstallDirs)
@@ -174,8 +174,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
   # the following targets: gtest, gtest_main, gmock
   # and gmock_main
   set(INSTALL_GTEST OFF)
-  add_subdirectory("${CMAKE_BINARY_DIR}/googletest-src"
-  "${CMAKE_BINARY_DIR}/googletest-build")
 
   # The gtest/gmock targets carry header search path
   # dependencies automatically when using CMake 2.8.11 or
